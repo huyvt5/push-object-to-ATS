@@ -1,0 +1,51 @@
+- Open your records.config in an editor
+
+$HOME_ATS/etc/trafficserver/
+CONFIG proxy.config.http.cache.http INT 1
+CONFIG proxy.config.http.push_method_enabled INT 1
+
+- Open your ip_allow.config 
+src_ip=127.0.0.1                                  action=ip_allow method=ALL
+src_ip=::1                                        action=ip_allow method=ALL
+# Deny PURGE, DELETE, and PUSH for all (this implies allow other methods for all)
+src_ip=0.0.0.0-255.255.255.255                    action=ip_deny  method=PURGE|DELETE
+src_ip=::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff action=ip_deny  method=PURGE|DELETE
+
+- Restart ATS service 
+
+- After using tool tspush in $HOME_ATS/bin/tspush 
+TEST : 
+After run tspush 
+
+[root@localhost trafficserver]# curl -H "Cache-Control: only-if-cached" "http://127.0.0.1:8080/404.html"
+<HTML>
+<HEAD>
+<TITLE>Not In Cache</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="white" FGCOLOR="black">
+<H1>Not In Cache</H1>
+<HR>
+
+<FONT FACE="Helvetica,Arial"><B>
+Description: Your request mandated that the document come from cache, but
+the document is not present in cache.  As requested, the transaction
+is being terminated.
+</B></FONT>
+<HR>
+</BODY>
+
+Before run tspush 
+[root@localhost bin]# ./tspush -f /usr/share/nginx/html/404.html -u http://127.0.0.1:8080/404.html     
+HTTP/1.0 201 Created
+Date: Thu, 06 Sep 2018 09:10:54 GMT
+Server: ATS/7.1.4
+Content-Length: 0
+
+[root@localhost trafficserver]# curl -H "Cache-Control: only-if-cached" "http://127.0.0.1:8080/404.html"
+Content-length: 3652
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+....
